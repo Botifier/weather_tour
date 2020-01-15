@@ -1,0 +1,50 @@
+version: '3'
+services:
+  db:
+    image: postgres:11-alpine
+  redis:
+    image: redis:alpine
+  apis:
+    build: .
+    command: dockerize -wait tcp://db:5432 -timeout 60s python manage.py runserver 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/code
+    environment: 
+      - REDIS_URL=redis
+    depends_on:
+      - db
+      - redis
+  celery-worker:
+    build: .
+    command: celery -A config worker -l INFO
+    volumes:
+      - .:/code
+    depends_on:
+      - redis
+    environment: 
+      - REDIS_URL=redis
+  celery-beat:
+    build: .
+    command: celery -A config beat -l INFO
+    volumes:
+      - .:/code
+    environment: 
+      - REDIS_URL=redis
+    depends_on:
+      - redis
+  init:
+    build: .
+    command: sh -c 'python manage.py migrate && python manage.py loaddata tour_api'
+    volumes:
+      - .:/code
+    depends_on:
+      - db
+  test:
+    build: .
+    command: dockerize -wait tcp://db:5432 -timeout 60s python manage.py test --settings=config.settings.test
+    volumes:
+      - .:/code
+    depends_on:
+      - db

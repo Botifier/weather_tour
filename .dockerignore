@@ -1,0 +1,5 @@
+.env
+.vscode
+README.md
+.git
+db.sqlite3

@@ -1,0 +1,8 @@
+.env
+**/__pycache__/
+**/*.py[cod]
+*$py.class
+.vscode/
+db.sqlite3
+celerybeat.pid
+celerybeat-schedule
